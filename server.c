@@ -46,7 +46,6 @@ void exit_server(){
 	exit(0);
 }
 int main() {
-    // Initialiser le buffer Ã  zÃ©ro
     memset(buffer, 0, sizeof(buffer));
 
     // Fonction pour la gestion des signaux pour SIGUSR1 et SIGUSR2
