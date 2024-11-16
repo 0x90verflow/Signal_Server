@@ -33,7 +33,7 @@ void handle_signal(int sig) {
 
 void print_buffer(int sig) {
     buffer[current_length] = '\0';  
-    printf("Message reÃ§u : %s\r\n", buffer);  
+    printf("Message reçu : %s\r\n", buffer);  
     printf("En attente de nouveau message ....\r\n");
     reset_buffer();
     current_length = 0; 
@@ -56,7 +56,7 @@ int main() {
     // Allocation du buffer
     buffer = malloc(MAX_BUFFER_SIZE * sizeof(char));
     if (buffer == NULL) {
-        printf("Erreur d'allocation mÃ©moire\n");
+        printf("Erreur d'allocation mémoire\n");
         exit(1);
     }
 
