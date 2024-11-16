@@ -37,8 +37,8 @@ void handle_signal(int sig) {
 }
 
 void print_buffer(int sig) {
-    buffer[strlen(buffer)] = '\0';  // Ajouter un caractÃ¨re de fin de chaÃ®ne
-    printf("Message reÃ§u : %s\r\n", buffer);  // Afficher le message complet
+    buffer[strlen(buffer)] = '\0';  // termine la chaine
+    printf("Message reÃ§u : %s\r\n", buffer); 
     printf("En attente de nouveau message ....\r\n");
 }
 
@@ -57,7 +57,6 @@ int main() {
     printf("PID du serveur : %d\n", getpid());
     printf("Serveur en attente des signaux...\n");
 
-    // Boucle infinie pour recevoir les signaux
     while (1) {
         pause(); 
     }
