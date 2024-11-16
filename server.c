@@ -6,26 +6,21 @@
 
 #define MAX_BUFFER_SIZE 1024
 
-void clear_buffer();
+void reset_buffer();
 
-char buffer[MAX_BUFFER_SIZE];
-
-
-
+char *buffer;
+static int current_length = 0; 
+static char current_char = 0;   
+static int bit_count = 0;       
 
 void handle_signal(int sig) {
-    static int current_length = 0; 
-    static char current_char = 0;  
-    static int bit_count = 0;  
-
-    // SIGUSR1 = 1 SIGUSR2 = 0
+    // SIGUSR1 = 1 et SIGUSR2 = 0
     if (sig == SIGUSR1) {
-        current_char |= (1 << (7 - bit_count));  // Ajouter 1 au bit en cours
+        current_char |= (1 << (7 - bit_count));
     }
 
-    bit_count++;  // Passer au bit suivant
+    bit_count++;
 
-    
     if (bit_count >= 8) {
         if (current_length < MAX_BUFFER_SIZE - 1) {
             buffer[current_length] = current_char; 
@@ -37,28 +32,48 @@ void handle_signal(int sig) {
 }
 
 void print_buffer(int sig) {
-    buffer[strlen(buffer)] = '\0';  // termine la chaine
-    printf("Message reÃ§u : %s\r\n", buffer); 
+    buffer[current_length] = '\0';  
+    printf("Message reÃ§u : %s\r\n", buffer);  
     printf("En attente de nouveau message ....\r\n");
+    reset_buffer();
+    current_length = 0; 
 }
 
-void exit_server(){
-	exit(0);
+void reset_buffer() {
+
+    for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
+        buffer[i] = 0;
+    }
 }
+
+
+void exit_server() {
+    exit(0);
+    printf("\n");
+}
+
 int main() {
-    memset(buffer, 0, sizeof(buffer));
+    // Allocation du buffer
+    buffer = malloc(MAX_BUFFER_SIZE * sizeof(char));
+    if (buffer == NULL) {
+        printf("Erreur d'allocation mÃ©moire\n");
+        exit(1);
+    }
 
-    // Fonction pour la gestion des signaux pour SIGUSR1 et SIGUSR2
-    signal(SIGUSR1, handle_signal); 
+    reset_buffer();
+
+    // Configurer les gestionnaires de signaux pour SIGUSR1 et SIGUSR2
+    signal(SIGUSR1, handle_signal);  
     signal(SIGUSR2, handle_signal);  
-
-    signal(SIGINT, exit_server);
+    signal(SIGTERM, print_buffer);  
+    signal(SIGINT, exit_server);  
 
     printf("PID du serveur : %d\n", getpid());
     printf("Serveur en attente des signaux...\n");
 
+    
     while (1) {
-        pause(); 
+        pause();  
     }
 
     return 0;
