@@ -6,63 +6,56 @@
 
 #define MAX_BUFFER_SIZE 1024
 
-void reset_buffer();
+struct ServerState {
+    char buffer[MAX_BUFFER_SIZE];
+    int current_length;
+    char current_char;
+    int bit_count;
+};
 
-char *buffer;
-static int current_length = 0;
-static char current_char = 0;
-static int bit_count = 0;     
+struct ServerState server_state;
+
+void reset_buffer() {
+    memset(server_state.buffer, 0, MAX_BUFFER_SIZE);
+    server_state.current_length = 0;
+    server_state.current_char = 0;
+    server_state.bit_count = 0;
+}
 
 void handle_signal(int sig) {
     // SIGUSR1 = 1 et SIGUSR2 = 0
     if (sig == SIGUSR1) {
-        current_char |= (1 << (7 - bit_count));
+        server_state.current_char |= (1 << (7 - server_state.bit_count));
     }
 
-    bit_count++;
+    server_state.bit_count++;
 
-    if (bit_count >= 8) {
-        if (current_length < MAX_BUFFER_SIZE - 1) {
-            buffer[current_length] = current_char;
-            current_length++;
+    if (server_state.bit_count >= 8) {
+        if (server_state.current_length < MAX_BUFFER_SIZE - 1) {
+            server_state.buffer[server_state.current_length] = server_state.current_char;
+            server_state.current_length++;
         }
-        current_char = 0;
-        bit_count = 0;
+        server_state.current_char = 0;
+        server_state.bit_count = 0;
     }
 }
 
 void print_buffer(int sig) {
-    buffer[current_length] = '\0';
-    printf("Message reçu : %s\r\n", buffer);
+    server_state.buffer[server_state.current_length] = '\0';
+    printf("Message reçu : %s\r\n", server_state.buffer);
     printf("En attente de nouveau message ....\r\n");
     reset_buffer();
-    current_length = 0;
 }
-
-void reset_buffer() {
-
-    for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
-        buffer[i] = 0;
-    }
-}
-
 
 void exit_server() {
+    printf("Fermeture du serveur...\n");
     exit(0);
-    printf("\n");
 }
 
 int main() {
-    // Allocation du buffer
-    buffer = malloc(MAX_BUFFER_SIZE * sizeof(char));
-    if (buffer == NULL) {
-        printf("Erreur d'allocation mémoire\n");
-        exit(1);
-    }
-
     reset_buffer();
 
-    // Configurer les gestionnaires de signaux pour SIGUSR1 et SIGUSR2
+    // Gestion des signaux
     signal(SIGUSR1, handle_signal);
     signal(SIGUSR2, handle_signal);
     signal(SIGTERM, print_buffer);
