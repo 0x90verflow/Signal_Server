@@ -43,7 +43,6 @@ void handle_signal(int sig) {
 void print_buffer(int sig) {
     server_state.buffer[server_state.current_length] = '\0';
     printf("Message reçu : %s\r\n", server_state.buffer);
-    printf("En attente de nouveau message ....\r\n");
     reset_buffer();
 }
 
