@@ -3,16 +3,20 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
-
+#include <time.h>
 #define MAX_BUFFER_SIZE 1024
-
+int createlog();
+// Structure pour contenir toutes les variables globales
 struct ServerState {
     char buffer[MAX_BUFFER_SIZE];
     int current_length;
     char current_char;
     int bit_count;
+    time_t now;
+    const char *logfile;
 };
 
+// Une seule variable globale : l'état du serveur
 struct ServerState server_state;
 
 void reset_buffer() {
@@ -44,19 +48,35 @@ void handle_signal(int sig) {
 
 void print_buffer(int sig) {
     server_state.buffer[server_state.current_length] = '\0';
-    printf("Message reçu : %s\r\n", server_state.buffer);
+    server_state.now = time(NULL);
+    struct tm *local = localtime(&server_state.now);
+    printf("Message reçu [%02d:%02d:%d]: %s\r\n",  local->tm_hour,local->tm_min, local->tm_sec, server_state.buffer);
+    printf("En attente de nouveau message ....\r\n");
+    createlog();
     reset_buffer();
 }
-
+int createlog(){
+    server_state.logfile = "log.txt";
+    FILE *file = fopen(server_state.logfile, "a");
+    if (file == NULL) {
+        perror("Erreur lors de l'ouverture du fichier log");
+        return 1;
+    }
+    server_state.now = time(NULL);
+    struct tm *local = localtime(&server_state.now);
+    fprintf(file, "Message reçu [%02d:%02d:%d]: %s\r\n", local->tm_hour,local->tm_min, local->tm_sec, server_state.buffer);
+    fclose(file);
+}
 void exit_server() {
     printf("Fermeture du serveur...\n");
     exit(0);
 }
 
 int main() {
+    // Initialiser l'état du serveur
     reset_buffer();
 
-    // Gestion des signaux
+    // Configurer les gestionnaires de signaux pour SIGUSR1 et SIGUSR2
     signal(SIGUSR1, handle_signal);
     signal(SIGUSR2, handle_signal);
     signal(SIGTERM, print_buffer);
