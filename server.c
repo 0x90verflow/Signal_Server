@@ -16,7 +16,9 @@ struct ServerState {
 struct ServerState server_state;
 
 void reset_buffer() {
-    memset(server_state.buffer, 0, MAX_BUFFER_SIZE);
+    for (int i = 0; i < MAX_BUFFER_SIZE; i++){
+    server_state.buffer[i] = 0;
+    }
     server_state.current_length = 0;
     server_state.current_char = 0;
     server_state.bit_count = 0;
